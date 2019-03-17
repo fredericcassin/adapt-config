@@ -1,0 +1,40 @@
+---
+# comment
+yaml:
+    - include:
+        - '**/*.yml__'
+        - '**/*.yaml__'
+      exclude:
+        - '**/*-metadata.yaml'
+      actions:
+        - get: $..persistence.pvcName,size.`parent`
+          if: type(get) is str
+          #match: '^(.*)$'
+          set: 'print(get)'
+    - include:
+        - '**/values.yaml'
+      exclude:
+        - '**/*-metadata.yaml'
+      actions:
+        - get: $.._alarm.persistence
+          hasattr: [pvcName,size]
+          #match: '^(.*)$'
+          set:
+            path: '$.persistent-volume.elem1'
+            value:
+              pvcName: v.pvcName
+              size: v.size
+        - get: $..imageName.`parent`
+          __hasattr__: [attrName, '!attrName']
+          perform:
+            - match: '^([^/]+/)?(.*)$'
+              value: v.imageName
+          set:
+            path: '$.image_repo[*]'
+            value:
+              image: v.imageName
+              name: '"{}:{}".format(v.performed[0][2], v.imageTag)' 
+              tag: v.imageTag
+---
+c:
+  d: dddd
